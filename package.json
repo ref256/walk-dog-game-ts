@@ -10,7 +10,6 @@
     "@types/node": "^16.18.12",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
-    "husky": "^8.0.3",
     "lint-staged": "^13.1.2",
     "prettier": "^2.8.4",
     "react": "^18.2.0",
@@ -22,8 +21,10 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "test": "react-scripts test --watchAll=false",
+    "eject": "react-scripts eject",
+    "prettier:src": "prettier --write 'src/**/*.{js,jsx,ts,tsx,json,css,scss}'",
+    "prepare": "husky install"
   },
   "eslintConfig": {
     "extends": [
@@ -52,5 +53,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@gravity-ui/prettier-config": "^1.0.1",
+    "husky": "^8.0.0"
   }
 }

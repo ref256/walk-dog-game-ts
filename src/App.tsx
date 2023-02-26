@@ -1,26 +1,29 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import {GameLoop} from './lib/engine/GameLoop';
+import {WalkDogGame} from './lib/game/WalkDogGame';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+export function App() {
+    React.useEffect(() => {
+        try {
+            const game = new WalkDogGame();
+            const gameLoop = new GameLoop();
+
+            gameLoop.start(game);
+        } catch (err) {
+            console.error(err);
+        }
+    }, []);
+
+    return (
+        <canvas
+            id="canvas"
+            data-testid="canvas"
+            tabIndex={0}
+            style={{outline: 'none'}}
+            height="600"
+            width="600"
         >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+            Your browser does not support canvas
+        </canvas>
+    );
 }
-
-export default App;
