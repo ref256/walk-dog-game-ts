@@ -58,7 +58,7 @@ export class RedHatBoy {
     }
 
     get walkingSpeed() {
-        return 0;
+        return 1;
     }
 
     reset(boy: RedHatBoy) {
