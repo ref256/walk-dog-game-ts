@@ -7,6 +7,7 @@ const TERMINAL_VELOCITY = 20;
 const FLOOR = 475;
 const PLAYER_HEIGHT = HEIGHT - FLOOR;
 const STARTING_POINT = -20;
+const JUMP_SPEED = -25;
 
 const IDLE_FRAME_NAME = 'Idle';
 const RUNNING_FRAME_NAME = 'Run';
@@ -22,7 +23,7 @@ const FALLING_FRAMES = 29;
 
 const RUNNING_SPEED = 4;
 
-type StateName = 'Idle' | 'Running';
+type StateName = 'Idle' | 'Running' | 'Sliding' | 'Jumping'; //   | 'Falling' | 'KockedOut'
 
 class Context {
     frame: number;
@@ -73,10 +74,12 @@ class Context {
     stop() {
         this.velocity.x = 0;
         this.velocity.y = 0;
+        return this;
     }
 
     setOn(position: number) {
         this.position.y = position - PLAYER_HEIGHT;
+        return this;
     }
 }
 
@@ -127,11 +130,63 @@ class RunningState extends State {
         this._context = this.context.update(RUNNING_FRAMES);
         return this;
     }
+
+    slide() {
+        return new SlidingState(this.context.resetFrame());
+    }
+
+    jump() {
+        return new JumpingState(this.context.resetFrame().setVerticalVelocity(JUMP_SPEED));
+    }
 }
 
-type RedHatBoyState = IdleState | RunningState;
+class SlidingState extends State {
+    constructor(context: Context) {
+        super('Sliding', context);
+    }
 
-export type Event = {name: 'Update'} | {name: 'Run'};
+    get frameName() {
+        return SLIDING_FRAME_NAME;
+    }
+
+    update(): SlidingState | RunningState {
+        this._context = this.context.update(SLIDING_FRAMES);
+        if (this.context.frame >= SLIDING_FRAMES) {
+            return this.stand();
+        }
+        return this;
+    }
+
+    stand() {
+        return new RunningState(this.context.resetFrame());
+    }
+}
+
+class JumpingState extends State {
+    constructor(context: Context) {
+        super('Jumping', context);
+    }
+
+    get frameName() {
+        return JUMPING_FRAME_NAME;
+    }
+
+    update(): JumpingState | RunningState {
+        this._context = this.context.update(JUMPING_FRAMES);
+        if (this.context.position.y >= FLOOR) {
+            return this.landOn(HEIGHT);
+        }
+        return this;
+    }
+
+    landOn(position: number) {
+        return new RunningState(this.context.resetFrame().setOn(position));
+    }
+}
+
+type RedHatBoyState = IdleState | RunningState | SlidingState | JumpingState;
+
+export type Event = {name: 'Update'} | {name: 'Run'} | {name: 'Slide'} | {name: 'Jump'};
 
 export class RedHatBoyStateMachine {
     private _state: RedHatBoyState;
@@ -143,8 +198,14 @@ export class RedHatBoyStateMachine {
     transition(event: Event) {
         this._state = match([this._state, event])
             .with([{name: 'Idle'}, {name: 'Run'}], ([state]) => (state as IdleState).run())
+            .with([{name: 'Running'}, {name: 'Slide'}], ([state]) =>
+                (state as RunningState).slide(),
+            )
+            .with([{name: 'Running'}, {name: 'Jump'}], ([state]) => (state as RunningState).jump())
             .with([{name: 'Idle'}, {name: 'Update'}], ([state]) => state.update())
             .with([{name: 'Running'}, {name: 'Update'}], ([state]) => state.update())
+            .with([{name: 'Sliding'}, {name: 'Update'}], ([state]) => state.update())
+            .with([{name: 'Jumping'}, {name: 'Update'}], ([state]) => state.update())
             .with(P._, ([state]) => state)
             .exhaustive();
     }
@@ -153,6 +214,8 @@ export class RedHatBoyStateMachine {
         return match([this._state])
             .with([{name: 'Idle'}], ([state]) => state.frameName)
             .with([{name: 'Running'}], ([state]) => state.frameName)
+            .with([{name: 'Sliding'}], ([state]) => state.frameName)
+            .with([{name: 'Jumping'}], ([state]) => state.frameName)
             .exhaustive();
     }
 
@@ -160,6 +223,8 @@ export class RedHatBoyStateMachine {
         return match([this._state])
             .with([{name: 'Idle'}], ([state]) => state.context)
             .with([{name: 'Running'}], ([state]) => state.context)
+            .with([{name: 'Sliding'}], ([state]) => state.context)
+            .with([{name: 'Jumping'}], ([state]) => state.context)
             .exhaustive();
     }
 

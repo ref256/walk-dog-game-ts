@@ -83,4 +83,12 @@ export class RedHatBoy {
     runRight() {
         this._machine.transition({name: 'Run'});
     }
+
+    slide() {
+        this._machine.transition({name: 'Slide'});
+    }
+
+    jump() {
+        this._machine.transition({name: 'Jump'});
+    }
 }

@@ -48,6 +48,13 @@ class WalkingState extends State {
     }
 
     update(keystate: KeyState) {
+        if (keystate.isPressed('ArrowDown')) {
+            this.world.boy.slide();
+        }
+        if (keystate.isPressed('Space')) {
+            this.world.boy.jump();
+        }
+
         this.world.boy.update();
 
         const walkingSpeed = this.world.velocity;
