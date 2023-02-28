@@ -1,22 +1,21 @@
 import {Rect} from '../engine/Rect';
 import {Renderer} from '../engine/Renderer';
 import {Sheet, SpriteSheet} from '../engine/SpriteSheet';
-
-const IDLE_FRAMES = 29;
+import {RedHatBoyStateMachine} from './RedHatBoyStateMachine';
 
 export class RedHatBoy {
     private _spriteSheet: SpriteSheet;
-    private _frameName: string;
-    private _frame: number;
+    private _machine: RedHatBoyStateMachine;
 
     constructor(sheet: Sheet, image: HTMLImageElement) {
         this._spriteSheet = new SpriteSheet(sheet, image);
-        this._frameName = 'Idle';
-        this._frame = 0;
+        this._machine = new RedHatBoyStateMachine();
     }
 
     get frameName() {
-        return `${this._frameName} (${Math.floor(this._frame / 3) + 1}).png`;
+        return `${this._machine.frameName} (${
+            Math.floor(this._machine.context.frame / 3) + 1
+        }).png`;
     }
 
     get currentSprite() {
@@ -30,7 +29,10 @@ export class RedHatBoy {
     get destinationBox() {
         const sprite = this.currentSprite;
         return new Rect(
-            {x: sprite.spriteSourceSize.x, y: sprite.spriteSourceSize.y},
+            {
+                x: this._machine.context.position.x + sprite.spriteSourceSize.x,
+                y: this._machine.context.position.y + sprite.spriteSourceSize.y,
+            },
             sprite.frame.w,
             sprite.frame.h,
         );
@@ -50,15 +52,15 @@ export class RedHatBoy {
     }
 
     get posY() {
-        return 475;
+        return this._machine.context.position.y;
     }
 
     get velocityY() {
-        return 0;
+        return this._machine.context.velocity.y;
     }
 
     get walkingSpeed() {
-        return 1;
+        return this._machine.context.velocity.x;
     }
 
     reset(boy: RedHatBoy) {
@@ -75,10 +77,10 @@ export class RedHatBoy {
     }
 
     update() {
-        if (this._frame < IDLE_FRAMES) {
-            this._frame += 1;
-        } else {
-            this._frame = 0;
-        }
+        this._machine.update();
+    }
+
+    runRight() {
+        this._machine.transition({name: 'Run'});
     }
 }

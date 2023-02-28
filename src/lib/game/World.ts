@@ -2,6 +2,8 @@ import {Image} from '../engine/Image';
 import {Renderer} from '../engine/Renderer';
 import {RedHatBoy} from './RedHatBoy';
 
+export const HEIGHT = 600;
+
 export class World {
     private _boy: RedHatBoy;
     private _backgrounds: [Image, Image];

@@ -1,5 +1,6 @@
 import {getContext, getNow} from '../browser';
 import {Game} from './Game';
+import {KeyState} from './KeyState';
 import {Renderer} from './Renderer';
 
 const FRAME_SIZE = (1 / 60) * 1000;
@@ -16,12 +17,13 @@ export class GameLoop {
     async start(newGame: Game) {
         const game = await newGame.initialize();
         const renderer = new Renderer(getContext());
+        const keystate = new KeyState();
 
         const frame = (perf: number) => {
             const frameTime = perf - this._lastFrame;
             this._accumulatedDelta += frameTime;
             while (this._accumulatedDelta > FRAME_SIZE) {
-                game.update();
+                game.update(keystate);
                 this._accumulatedDelta -= FRAME_SIZE;
             }
             this._lastFrame = perf;
