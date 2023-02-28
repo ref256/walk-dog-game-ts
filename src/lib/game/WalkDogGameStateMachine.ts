@@ -1,7 +1,7 @@
 import {match} from 'ts-pattern';
 import {KeyState} from '../engine/KeyState';
 import {Renderer} from '../engine/Renderer';
-import {World} from './World';
+import {TIMELINE_MINIMUM, World} from './World';
 
 type StateName = 'Ready' | 'Walking' | 'GameOver';
 
@@ -69,7 +69,28 @@ class WalkingState extends State {
         if (secondBackground.right < 0) {
             secondBackground.x = firstBackground.right;
         }
+
+        this.world.obstacles = this.world.obstacles.filter((obstacle) => obstacle.right() > 0);
+        this.world.obstacles.forEach((obstacle) => {
+            obstacle.moveHorizontally(walkingSpeed);
+            obstacle.checkIntersection(this.world.boy);
+        });
+
+        if (this.world.timeline < TIMELINE_MINIMUM) {
+            console.log('next segment', this.world.timeline);
+            this.world.generateNextSegment();
+        } else {
+            this.world.timeline += walkingSpeed;
+        }
+
+        if (this.world.knockedOut) {
+            return this.endGame();
+        }
         return this;
+    }
+
+    endGame() {
+        return new GameOverState(this.world);
     }
 }
 

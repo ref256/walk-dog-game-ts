@@ -63,6 +63,10 @@ export class RedHatBoy {
         return this._machine.context.velocity.x;
     }
 
+    get knockedOut() {
+        return this._machine.knockedOut;
+    }
+
     reset(boy: RedHatBoy) {
         this._spriteSheet = boy._spriteSheet;
     }
@@ -90,5 +94,13 @@ export class RedHatBoy {
 
     jump() {
         this._machine.transition({name: 'Jump'});
+    }
+
+    knockOut() {
+        this._machine.transition({name: 'KnockOut'});
+    }
+
+    landOn(position: number) {
+        this._machine.transition({name: 'Land', position});
     }
 }

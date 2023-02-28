@@ -1,18 +1,33 @@
+import {match, P} from 'ts-pattern';
 import {Image} from '../engine/Image';
 import {Renderer} from '../engine/Renderer';
+import {getStoneAndStone, rightmostObstacle} from './helpers/segments';
+import {Obstacle} from './Obstacle';
 import {RedHatBoy} from './RedHatBoy';
 
 export const HEIGHT = 600;
+export const TIMELINE_MINIMUM = 1000;
+const OBSTACLE_BUFFER = 20;
 
 export class World {
     private _boy: RedHatBoy;
     private _backgrounds: [Image, Image];
-    // private _timeline: number;
+    private _obstacles: Obstacle[];
+    private _stone: HTMLImageElement;
+    private _timeline: number;
 
-    constructor(boy: RedHatBoy, backgrounds: [Image, Image]) {
+    constructor(
+        boy: RedHatBoy,
+        backgrounds: [Image, Image],
+        obstacles: Obstacle[],
+        stone: HTMLImageElement,
+        timeline: number,
+    ) {
         this._boy = boy;
         this._backgrounds = backgrounds;
-        // this._timeline = timeline;
+        this._obstacles = obstacles;
+        this._stone = stone;
+        this._timeline = timeline;
     }
 
     get boy() {
@@ -23,8 +38,42 @@ export class World {
         return this._backgrounds;
     }
 
+    get obstacles() {
+        return this._obstacles;
+    }
+
+    set obstacles(value) {
+        this._obstacles = value;
+    }
+
+    get timeline() {
+        return this._timeline;
+    }
+
+    set timeline(value) {
+        this._timeline = value;
+    }
+
     get velocity() {
         return -this._boy.walkingSpeed;
+    }
+
+    get knockedOut() {
+        return this.boy.knockedOut;
+    }
+
+    generateNextSegment() {
+        const nextSegment = Math.floor(Math.random() * 3);
+
+        const nextObstacles = match(nextSegment)
+            .with(0, (_) => getStoneAndStone(this._stone, this.timeline + OBSTACLE_BUFFER))
+            .with(1, (_) => getStoneAndStone(this._stone, this.timeline + OBSTACLE_BUFFER))
+            .with(2, (_) => getStoneAndStone(this._stone, this.timeline + OBSTACLE_BUFFER))
+            .with(P._, (_) => [])
+            .exhaustive();
+
+        this.timeline = rightmostObstacle(nextObstacles);
+        this.obstacles = this.obstacles.concat(nextObstacles);
     }
 
     draw(renderer: Renderer) {
@@ -32,5 +81,8 @@ export class World {
             background.draw(renderer);
         });
         this._boy.draw(renderer);
+        this.obstacles.forEach((obstacle) => {
+            obstacle.draw(renderer);
+        });
     }
 }

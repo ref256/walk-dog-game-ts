@@ -1,4 +1,4 @@
-import {match, P} from 'ts-pattern';
+import {isMatching, match, P} from 'ts-pattern';
 import {Point} from '../engine/Rect';
 import {HEIGHT} from './World';
 
@@ -23,7 +23,7 @@ const FALLING_FRAMES = 29;
 
 const RUNNING_SPEED = 4;
 
-type StateName = 'Idle' | 'Running' | 'Sliding' | 'Jumping'; //   | 'Falling' | 'KockedOut'
+type StateName = 'Idle' | 'Running' | 'Sliding' | 'Jumping' | 'Falling' | 'KnockedOut';
 
 class Context {
     frame: number;
@@ -138,6 +138,14 @@ class RunningState extends State {
     jump() {
         return new JumpingState(this.context.resetFrame().setVerticalVelocity(JUMP_SPEED));
     }
+
+    landOn(position: number) {
+        return new RunningState(this.context.setOn(position));
+    }
+
+    knockOut() {
+        return new FallingState(this.context.resetFrame().stop());
+    }
 }
 
 class SlidingState extends State {
@@ -159,6 +167,14 @@ class SlidingState extends State {
 
     stand() {
         return new RunningState(this.context.resetFrame());
+    }
+
+    landOn(position: number) {
+        return new SlidingState(this.context.setOn(position));
+    }
+
+    knockOut() {
+        return new FallingState(this.context.resetFrame().stop());
     }
 }
 
@@ -182,11 +198,63 @@ class JumpingState extends State {
     landOn(position: number) {
         return new RunningState(this.context.resetFrame().setOn(position));
     }
+
+    knockOut() {
+        return new FallingState(this.context.resetFrame().stop());
+    }
 }
 
-type RedHatBoyState = IdleState | RunningState | SlidingState | JumpingState;
+class FallingState extends State {
+    constructor(context: Context) {
+        super('Falling', context);
+    }
 
-export type Event = {name: 'Update'} | {name: 'Run'} | {name: 'Slide'} | {name: 'Jump'};
+    get frameName() {
+        return FALLING_FRAME_NAME;
+    }
+
+    update(): FallingState | KnockedOutState {
+        this._context = this.context.update(FALLING_FRAMES);
+        if (this.context.frame >= FALLING_FRAMES) {
+            return this.knockOut();
+        }
+        return this;
+    }
+
+    knockOut() {
+        return new KnockedOutState(this.context);
+    }
+}
+
+class KnockedOutState extends State {
+    constructor(context: Context) {
+        super('KnockedOut', context);
+    }
+
+    get frameName() {
+        return FALLING_FRAME_NAME;
+    }
+
+    update() {
+        return this;
+    }
+}
+
+type RedHatBoyState =
+    | IdleState
+    | RunningState
+    | SlidingState
+    | JumpingState
+    | FallingState
+    | KnockedOutState;
+
+export type Event =
+    | {name: 'Update'}
+    | {name: 'Run'}
+    | {name: 'Slide'}
+    | {name: 'Jump'}
+    | {name: 'KnockOut'}
+    | {name: 'Land'; position: number};
 
 export class RedHatBoyStateMachine {
     private _state: RedHatBoyState;
@@ -202,10 +270,29 @@ export class RedHatBoyStateMachine {
                 (state as RunningState).slide(),
             )
             .with([{name: 'Running'}, {name: 'Jump'}], ([state]) => (state as RunningState).jump())
+            .with([{name: 'Running'}, {name: 'Land'}], ([state, {position}]) =>
+                (state as RunningState).landOn(position),
+            )
+            .with([{name: 'Sliding'}, {name: 'Land'}], ([state, {position}]) =>
+                (state as SlidingState).landOn(position),
+            )
+            .with([{name: 'Jumping'}, {name: 'Land'}], ([state, {position}]) =>
+                (state as JumpingState).landOn(position),
+            )
+            .with([{name: 'Running'}, {name: 'KnockOut'}], ([state]) =>
+                (state as RunningState).knockOut(),
+            )
+            .with([{name: 'Sliding'}, {name: 'KnockOut'}], ([state]) =>
+                (state as SlidingState).knockOut(),
+            )
+            .with([{name: 'Jumping'}, {name: 'KnockOut'}], ([state]) =>
+                (state as JumpingState).knockOut(),
+            )
             .with([{name: 'Idle'}, {name: 'Update'}], ([state]) => state.update())
             .with([{name: 'Running'}, {name: 'Update'}], ([state]) => state.update())
             .with([{name: 'Sliding'}, {name: 'Update'}], ([state]) => state.update())
             .with([{name: 'Jumping'}, {name: 'Update'}], ([state]) => state.update())
+            .with([{name: 'Falling'}, {name: 'Update'}], ([state]) => state.update())
             .with(P._, ([state]) => state)
             .exhaustive();
     }
@@ -216,6 +303,8 @@ export class RedHatBoyStateMachine {
             .with([{name: 'Running'}], ([state]) => state.frameName)
             .with([{name: 'Sliding'}], ([state]) => state.frameName)
             .with([{name: 'Jumping'}], ([state]) => state.frameName)
+            .with([{name: 'Falling'}], ([state]) => state.frameName)
+            .with([{name: 'KnockedOut'}], ([state]) => state.frameName)
             .exhaustive();
     }
 
@@ -225,7 +314,13 @@ export class RedHatBoyStateMachine {
             .with([{name: 'Running'}], ([state]) => state.context)
             .with([{name: 'Sliding'}], ([state]) => state.context)
             .with([{name: 'Jumping'}], ([state]) => state.context)
+            .with([{name: 'Falling'}], ([state]) => state.context)
+            .with([{name: 'KnockedOut'}], ([state]) => state.context)
             .exhaustive();
+    }
+
+    get knockedOut() {
+        return isMatching(this._state, {name: 'KnockedOut'});
     }
 
     update() {
