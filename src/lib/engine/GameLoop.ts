@@ -9,6 +9,10 @@ export class GameLoop {
     private _lastFrame: number;
     private _accumulatedDelta: number;
 
+    private static FRAMES_COUNTED = 0;
+    private static TOTAL_FRAME_TIME = 0;
+    private static FRAME_RATE = 0;
+
     constructor() {
         this._lastFrame = getNow();
         this._accumulatedDelta = 0;
@@ -29,6 +33,10 @@ export class GameLoop {
             this._lastFrame = perf;
             game.draw(renderer);
 
+            if (process.env.NODE_ENV === 'development') {
+                this.drawFrameRate(renderer, frameTime);
+            }
+
             requestAnimationFrame(frame.bind(this));
         };
 
@@ -37,5 +45,18 @@ export class GameLoop {
         } catch {
             throw new Error('Failed to start GameLoop');
         }
+    }
+
+    private drawFrameRate(renderer: Renderer, frameTime: number) {
+        GameLoop.FRAMES_COUNTED += 1;
+        GameLoop.TOTAL_FRAME_TIME += frameTime;
+
+        if (GameLoop.TOTAL_FRAME_TIME > 1000) {
+            GameLoop.FRAME_RATE = GameLoop.FRAMES_COUNTED;
+            GameLoop.TOTAL_FRAME_TIME = 0;
+            GameLoop.FRAMES_COUNTED = 0;
+        }
+
+        renderer.drawText(`Frame rate ${GameLoop.FRAME_RATE}`, {x: 400, y: 100});
     }
 }
