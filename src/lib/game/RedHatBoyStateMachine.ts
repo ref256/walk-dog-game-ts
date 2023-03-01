@@ -1,4 +1,5 @@
 import {isMatching, match, P} from 'ts-pattern';
+import {Audio, Sound} from '../engine/Audio';
 import {Point} from '../engine/Rect';
 import {HEIGHT} from './World';
 
@@ -29,11 +30,15 @@ class Context {
     frame: number;
     position: Point;
     velocity: Point;
+    audio: Audio;
+    jumpSound: Sound;
 
-    constructor(frame: number, position: Point, velocity: Point) {
+    constructor(frame: number, position: Point, velocity: Point, audio: Audio, jumpSound: Sound) {
         this.frame = frame;
         this.position = position;
         this.velocity = velocity;
+        this.audio = audio;
+        this.jumpSound = jumpSound;
     }
 
     update(frameCount: number) {
@@ -53,6 +58,15 @@ class Context {
             this.position.y = FLOOR;
         }
 
+        return this;
+    }
+
+    playJumpSound() {
+        try {
+            this.audio.playSound(this.jumpSound);
+        } catch (err) {
+            console.error('Error playing jump sound', err);
+        }
         return this;
     }
 
@@ -98,8 +112,14 @@ class State {
 }
 
 class IdleState extends State {
-    constructor() {
-        const context = new Context(0, {x: STARTING_POINT, y: FLOOR}, {x: 0, y: 0});
+    constructor(audio: Audio, jumpSound: Sound) {
+        const context = new Context(
+            0,
+            {x: STARTING_POINT, y: FLOOR},
+            {x: 0, y: 0},
+            audio,
+            jumpSound,
+        );
         super('Idle', context);
     }
 
@@ -136,7 +156,9 @@ class RunningState extends State {
     }
 
     jump() {
-        return new JumpingState(this.context.resetFrame().setVerticalVelocity(JUMP_SPEED));
+        return new JumpingState(
+            this.context.resetFrame().setVerticalVelocity(JUMP_SPEED).playJumpSound(),
+        );
     }
 
     landOn(position: number) {
@@ -259,8 +281,8 @@ export type Event =
 export class RedHatBoyStateMachine {
     private _state: RedHatBoyState;
 
-    constructor() {
-        this._state = new IdleState();
+    constructor(audio: Audio, jumpSound: Sound) {
+        this._state = new IdleState(audio, jumpSound);
     }
 
     transition(event: Event) {

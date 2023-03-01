@@ -1,3 +1,4 @@
+import {Audio, Sound} from '../engine/Audio';
 import {Rect} from '../engine/Rect';
 import {Renderer} from '../engine/Renderer';
 import {Sheet, SpriteSheet} from '../engine/SpriteSheet';
@@ -7,9 +8,9 @@ export class RedHatBoy {
     private _spriteSheet: SpriteSheet;
     private _machine: RedHatBoyStateMachine;
 
-    constructor(sheet: Sheet, image: HTMLImageElement) {
+    constructor(sheet: Sheet, image: HTMLImageElement, audio: Audio, jumpSound: Sound) {
         this._spriteSheet = new SpriteSheet(sheet, image);
-        this._machine = new RedHatBoyStateMachine();
+        this._machine = new RedHatBoyStateMachine(audio, jumpSound);
     }
 
     get frameName() {

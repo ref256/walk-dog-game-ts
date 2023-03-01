@@ -5,7 +5,8 @@ import {KeyState} from '../engine/KeyState';
 import {Rect} from '../engine/Rect';
 import {Renderer} from '../engine/Renderer';
 import {SpriteSheet} from '../engine/SpriteSheet';
-import {getStoneAndPlatform, getStoneAndStone, rightmostObstacle} from './helpers/segments';
+import {Audio} from '../engine/Audio';
+import {getStoneAndPlatform, rightmostObstacle} from './helpers/segments';
 import {RedHatBoy} from './RedHatBoy';
 import {WalkDogStateMachine} from './WalkDogGameStateMachine';
 import {World} from './World';
@@ -16,7 +17,9 @@ export class WalkDogGame implements Game {
     async initialize(): Promise<Game> {
         const rhbJson = await (await fetch('rhb.json')).json();
         const rhbImage = await loadImage('rhb.png');
-        const boy = new RedHatBoy(rhbJson, rhbImage);
+        const audio = new Audio();
+        const sound = await audio.loadSound('SFX_Jump_23.mp3');
+        const boy = new RedHatBoy(rhbJson, rhbImage, audio, sound);
 
         const background = await loadImage('BG.png');
         const backgroundWidth = background.width;
