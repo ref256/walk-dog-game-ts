@@ -1,4 +1,3 @@
-import {Image} from '../engine/Image';
 import {Point, Rect} from '../engine/Rect';
 import {Renderer} from '../engine/Renderer';
 import {Cell, SpriteSheet} from '../engine/SpriteSheet';
