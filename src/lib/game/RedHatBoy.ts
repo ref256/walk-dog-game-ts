@@ -1,16 +1,18 @@
 import {Audio, Sound} from '../engine/Audio';
 import {Rect} from '../engine/Rect';
 import {Renderer} from '../engine/Renderer';
-import {Sheet, SpriteSheet} from '../engine/SpriteSheet';
+import {Sheet} from '../engine/SpriteSheet';
 import {RedHatBoyStateMachine} from './RedHatBoyStateMachine';
 
 export class RedHatBoy {
-    private _spriteSheet: SpriteSheet;
+    private _spriteSheet: Sheet;
     private _machine: RedHatBoyStateMachine;
+    private _image: HTMLImageElement;
 
     constructor(sheet: Sheet, image: HTMLImageElement, audio: Audio, jumpSound: Sound) {
-        this._spriteSheet = new SpriteSheet(sheet, image);
+        this._spriteSheet = sheet;
         this._machine = new RedHatBoyStateMachine(audio, jumpSound);
+        this._image = image;
     }
 
     get frameName() {
@@ -20,7 +22,7 @@ export class RedHatBoy {
     }
 
     get currentSprite() {
-        const sprite = this._spriteSheet.sheet.frames[this.frameName];
+        const sprite = this._spriteSheet.frames[this.frameName];
         if (!sprite) {
             throw new Error('Sprite not found');
         }
@@ -68,14 +70,19 @@ export class RedHatBoy {
         return this._machine.knockedOut;
     }
 
-    reset(boy: RedHatBoy) {
-        this._spriteSheet = boy._spriteSheet;
+    static reset(boy: RedHatBoy) {
+        return new RedHatBoy(
+            boy._spriteSheet,
+            boy._image,
+            boy._machine.context.audio,
+            boy._machine.context.jumpSound,
+        );
     }
 
     draw(renderer: Renderer) {
         const sprite = this.currentSprite;
         renderer.drawImage(
-            this._spriteSheet.image,
+            this._image,
             new Rect({x: sprite.frame.x, y: sprite.frame.y}, sprite.frame.w, sprite.frame.h),
             this.destinationBox,
         );

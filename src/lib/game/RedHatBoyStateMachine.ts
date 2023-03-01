@@ -342,7 +342,7 @@ export class RedHatBoyStateMachine {
     }
 
     get knockedOut() {
-        return isMatching(this._state, {name: 'KnockedOut'});
+        return this._state.name === 'KnockedOut';
     }
 
     update() {

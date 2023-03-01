@@ -15,15 +15,18 @@ export function App() {
     }, []);
 
     return (
-        <canvas
-            id="canvas"
-            data-testid="canvas"
-            tabIndex={0}
-            style={{outline: 'none'}}
-            height="600"
-            width="600"
-        >
-            Your browser does not support canvas
-        </canvas>
+        <React.Fragment>
+            <div id="ui"></div>
+            <canvas
+                id="canvas"
+                data-testid="canvas"
+                tabIndex={0}
+                style={{outline: 'none'}}
+                height="600"
+                width="600"
+            >
+                Your browser does not support canvas
+            </canvas>
+        </React.Fragment>
     );
 }

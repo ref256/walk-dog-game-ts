@@ -26,3 +26,23 @@ export async function loadImage(source: string) {
         image.src = source;
     });
 }
+
+export function findHtmlElementById(id: string) {
+    const element = document.getElementById(id);
+    if (!element) {
+        throw new Error(`Element with id ${id} not found`);
+    }
+    return element;
+}
+
+export function drawUi(html: string) {
+    findHtmlElementById('ui').insertAdjacentHTML('afterbegin', html);
+}
+
+export function hideUi() {
+    const ui = findHtmlElementById('ui');
+    if (ui.firstChild) {
+        ui.removeChild(ui.firstChild);
+        document.getElementById('canvas')?.focus();
+    }
+}

@@ -54,6 +54,10 @@ export class World {
         return this._obstacleSheet;
     }
 
+    get stone() {
+        return this._stone;
+    }
+
     get timeline() {
         return this._timeline;
     }
@@ -68,6 +72,20 @@ export class World {
 
     get knockedOut() {
         return this.boy.knockedOut;
+    }
+
+    static reset(world: World) {
+        const startingObstacles = getStoneAndPlatform(world.stone, world.obstacleSheet, 0);
+        const timeline = rightmostObstacle(startingObstacles);
+
+        return new World(
+            RedHatBoy.reset(world.boy),
+            world.backgrounds,
+            startingObstacles,
+            world.obstacleSheet,
+            world.stone,
+            timeline,
+        );
     }
 
     generateNextSegment() {

@@ -1,4 +1,5 @@
 import {match} from 'ts-pattern';
+import {drawUi, findHtmlElementById, hideUi} from '../browser';
 import {KeyState} from '../engine/KeyState';
 import {Renderer} from '../engine/Renderer';
 import {TIMELINE_MINIMUM, World} from './World';
@@ -77,7 +78,6 @@ class WalkingState extends State {
         });
 
         if (this.world.timeline < TIMELINE_MINIMUM) {
-            console.log('next segment', this.world.timeline);
             this.world.generateNextSegment();
         } else {
             this.world.timeline += walkingSpeed;
@@ -95,16 +95,30 @@ class WalkingState extends State {
 }
 
 class GameOverState extends State {
+    private _newGamePressed: boolean;
+
     constructor(world: World) {
         super('GameOver', world);
+        this._newGamePressed = false;
+        drawUi(`<button id='new_game'>New Game</button>`);
+        const button = findHtmlElementById('new_game');
+        button.addEventListener('click', this.handleClick.bind(this));
     }
 
-    update() {
+    handleClick() {
+        hideUi();
+        this._newGamePressed = true;
+    }
+
+    update(): GameOverState | ReadyState {
+        if (this._newGamePressed) {
+            return this.newGame();
+        }
         return this;
     }
 
     newGame() {
-        console.log('new game');
+        return new ReadyState(World.reset(this.world));
     }
 }
 
@@ -118,11 +132,14 @@ export class WalkDogStateMachine {
     }
 
     update(keystate: KeyState) {
-        this._state = match([this._state])
+        const newState = match([this._state])
             .with([{name: 'Ready'}], ([state]) => state.update(keystate))
             .with([{name: 'Walking'}], ([state]) => state.update(keystate))
             .with([{name: 'GameOver'}], ([state]) => (state as GameOverState).update())
             .exhaustive();
+        if (newState) {
+            this._state = newState;
+        }
     }
 
     draw(renderer: Renderer) {
