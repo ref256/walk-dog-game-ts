@@ -4,7 +4,8 @@ import {Image} from '../engine/Image';
 import {KeyState} from '../engine/KeyState';
 import {Rect} from '../engine/Rect';
 import {Renderer} from '../engine/Renderer';
-import {getStoneAndStone, rightmostObstacle} from './helpers/segments';
+import {SpriteSheet} from '../engine/SpriteSheet';
+import {getStoneAndPlatform, getStoneAndStone, rightmostObstacle} from './helpers/segments';
 import {RedHatBoy} from './RedHatBoy';
 import {WalkDogStateMachine} from './WalkDogGameStateMachine';
 import {World} from './World';
@@ -22,7 +23,11 @@ export class WalkDogGame implements Game {
 
         const stone = await loadImage('stone.png');
 
-        const startingObstacles = getStoneAndStone(stone, 0);
+        const tilesJson = await (await fetch('tiles.json')).json();
+        const tilesSpriteSheet = new SpriteSheet(tilesJson, await loadImage('tiles.png'));
+
+        // const startingObstacles = getStoneAndStone(stone, 0);
+        const startingObstacles = getStoneAndPlatform(stone, tilesSpriteSheet, 0);
         const timeline = rightmostObstacle(startingObstacles);
 
         const world = new World(
@@ -32,6 +37,7 @@ export class WalkDogGame implements Game {
                 new Image(background, {x: backgroundWidth, y: 0}),
             ],
             startingObstacles,
+            tilesSpriteSheet,
             stone,
             timeline,
         );

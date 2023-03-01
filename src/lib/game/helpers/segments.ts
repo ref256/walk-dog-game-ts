@@ -1,7 +1,9 @@
 import {Image} from '../../engine/Image';
-import {Rect} from '../../engine/Rect';
+import {Point, Rect} from '../../engine/Rect';
+import {SpriteSheet} from '../../engine/SpriteSheet';
 import {Barrier} from '../Barrier';
 import {Obstacle} from '../Obstacle';
+import {Platform} from '../Platform';
 
 const LOW_PLATFORM = 420;
 const HIGH_PLATFORM = 375;
@@ -35,6 +37,49 @@ export function getStoneAndStone(stone: HTMLImageElement, offsetX: number) {
         new Barrier(new Image(stone, {x: offsetX + INITIAL_STONE_OFFSET, y: STONE_ON_GROUND})),
         new Barrier(new Image(stone, {x: offsetX + INITIAL_STONE2_OFFSET, y: STONE_ON_GROUND})),
     ];
+}
+
+export function getStoneAndPlatform(
+    stone: HTMLImageElement,
+    spriteSheet: SpriteSheet,
+    offsetX: number,
+) {
+    const INITIAL_STONE_OFFSET = 150;
+    const INITIAL_PLATFORM_OFFSET = 400;
+
+    return [
+        new Barrier(new Image(stone, {x: offsetX + INITIAL_STONE_OFFSET, y: STONE_ON_GROUND})),
+        createFloatingPlatform(spriteSheet, {
+            x: offsetX + INITIAL_PLATFORM_OFFSET,
+            y: LOW_PLATFORM,
+        }),
+    ];
+}
+
+export function getPlatformAndStone(
+    stone: HTMLImageElement,
+    spriteSheet: SpriteSheet,
+    offsetX: number,
+) {
+    const INITIAL_STONE_OFFSET = 400;
+    const INITIAL_PLATFORM_OFFSET = 200;
+
+    return [
+        new Barrier(new Image(stone, {x: offsetX + INITIAL_STONE_OFFSET, y: STONE_ON_GROUND})),
+        createFloatingPlatform(spriteSheet, {
+            x: offsetX + INITIAL_PLATFORM_OFFSET,
+            y: HIGH_PLATFORM,
+        }),
+    ];
+}
+
+function createFloatingPlatform(spriteSheet: SpriteSheet, position: Point) {
+    return new Platform(
+        spriteSheet,
+        position,
+        FLOATING_PLATFORM_SPRITES,
+        FLOATING_PLATFORM_BOUNDING_BOXES,
+    );
 }
 
 export function rightmostObstacle(obstacles: Obstacle[]) {

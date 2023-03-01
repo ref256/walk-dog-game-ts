@@ -5,7 +5,7 @@ export type Sheet = {
     frames: Record<string, Cell>;
 };
 
-type Cell = {
+export type Cell = {
     frame: SheetRect;
     spriteSourceSize: SheetRect;
 };

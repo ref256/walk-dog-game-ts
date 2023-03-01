@@ -1,7 +1,8 @@
 import {match, P} from 'ts-pattern';
 import {Image} from '../engine/Image';
 import {Renderer} from '../engine/Renderer';
-import {getStoneAndStone, rightmostObstacle} from './helpers/segments';
+import {SpriteSheet} from '../engine/SpriteSheet';
+import {getPlatformAndStone, getStoneAndPlatform, rightmostObstacle} from './helpers/segments';
 import {Obstacle} from './Obstacle';
 import {RedHatBoy} from './RedHatBoy';
 
@@ -13,6 +14,7 @@ export class World {
     private _boy: RedHatBoy;
     private _backgrounds: [Image, Image];
     private _obstacles: Obstacle[];
+    private _obstacleSheet: SpriteSheet;
     private _stone: HTMLImageElement;
     private _timeline: number;
 
@@ -20,12 +22,14 @@ export class World {
         boy: RedHatBoy,
         backgrounds: [Image, Image],
         obstacles: Obstacle[],
+        obstacleSheet: SpriteSheet,
         stone: HTMLImageElement,
         timeline: number,
     ) {
         this._boy = boy;
         this._backgrounds = backgrounds;
         this._obstacles = obstacles;
+        this._obstacleSheet = obstacleSheet;
         this._stone = stone;
         this._timeline = timeline;
     }
@@ -46,6 +50,10 @@ export class World {
         this._obstacles = value;
     }
 
+    get obstacleSheet() {
+        return this._obstacleSheet;
+    }
+
     get timeline() {
         return this._timeline;
     }
@@ -63,12 +71,23 @@ export class World {
     }
 
     generateNextSegment() {
-        const nextSegment = Math.floor(Math.random() * 3);
+        const nextSegment = Math.floor(Math.random() * 2);
 
         const nextObstacles = match(nextSegment)
-            .with(0, (_) => getStoneAndStone(this._stone, this.timeline + OBSTACLE_BUFFER))
-            .with(1, (_) => getStoneAndStone(this._stone, this.timeline + OBSTACLE_BUFFER))
-            .with(2, (_) => getStoneAndStone(this._stone, this.timeline + OBSTACLE_BUFFER))
+            .with(0, (_) =>
+                getStoneAndPlatform(
+                    this._stone,
+                    this._obstacleSheet,
+                    this.timeline + OBSTACLE_BUFFER,
+                ),
+            )
+            .with(1, (_) =>
+                getPlatformAndStone(
+                    this._stone,
+                    this._obstacleSheet,
+                    this.timeline + OBSTACLE_BUFFER,
+                ),
+            )
             .with(P._, (_) => [])
             .exhaustive();
 
